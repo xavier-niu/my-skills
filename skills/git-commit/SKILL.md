@@ -95,13 +95,14 @@ Follow these rules for excellent commit messages:
 1. **Separate subject from body with a blank line** - Critical for readability
 2. **Use `{subsystem}: {commit title}` for the subject** - Keeps history scannable
 3. **Keep the subject concise** - Prefer one clear change summary
-4. **Do not end subject line with a period** - It's a title, not a sentence
-5. **Use imperative mood in subject** - "Add feature" not "Added feature"
+4. **Subject must not exceed 75 characters** - Including the `{subsystem}: ` prefix; shorten the title (or pick a tighter subsystem) rather than overflow
+5. **Do not end subject line with a period** - It's a title, not a sentence
+6. **Use imperative mood in subject** - "Add feature" not "Added feature"
    - Test: Subject should complete "If applied, this commit will _____"
-6. **Wrap body at 75 characters** - Ensures readability in terminals
-7. **Use one body paragraph** - Do not put blank lines inside the body
-8. **Use body to explain what and why vs. how** - Code shows how, commit explains why
-9. **Always commit with `git commit -s`** - Add a Signed-off-by trailer
+7. **Wrap body at 75 characters** - Ensures readability in terminals
+8. **Use one body paragraph** - Do not put blank lines inside the body
+9. **Use body to explain what and why vs. how** - Code shows how, commit explains why
+10. **Always commit with `git commit -s`** - Add a Signed-off-by trailer
 
 ### Message Structure
 
