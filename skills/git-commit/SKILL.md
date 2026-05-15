@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: Create logically grouped, atomic git commits with well-formatted commit messages following best practices. Use when user says "/commit", "commit changes", "create commits", asks about conventional commits format, needs to split changes into multiple commits, or wants help with git add -p partial staging.
+description: Use for commit-related git workflows, including creating, staging, reviewing, amending, or preparing git commits. Applies when the user asks to commit changes, run /commit, create signed-off commits, write commit messages, split changes into atomic commits, inspect git status/diff for commit planning, or use git add/git commit workflows.
 allowed-tools:
   - Bash(git:*)
   - Read
@@ -9,7 +9,8 @@ allowed-tools:
 
 # Git Commit Skill
 
-This skill helps you create well-structured, atomic git commits with properly formatted commit messages.
+This skill helps you create well-structured, atomic git commits with signed-off,
+subsystem-prefixed commit messages.
 
 ## When to Use This Skill
 
@@ -33,9 +34,9 @@ commits with unrelated changes.
    - Check git status to see staged and unstaged changes
    - Review git diff to understand what has changed
    - Check recent commits (`git log --oneline -20`) to understand:
-     - Whether the project uses conventional commits (e.g., `feat:`, `fix:`, `docs:`)
-     - The project's commit message style and conventions
-     - Typical subject line length and formatting patterns
+     - the subsystem names commonly used by the project
+     - the project's capitalization and wording conventions
+     - typical subject line length and formatting patterns
 
 2. **Group Changes Logically**
    - Identify related changes that should be committed together
@@ -45,67 +46,71 @@ commits with unrelated changes.
 3. **Create Commits**
    - Stage the appropriate changes for each commit
    - Write commit messages following the best practices below
+   - Always create commits with `git commit -s`
    - Verify each commit is atomic and complete
 
-## Commit Message Format Detection
+## Commit Message Format
 
-**IMPORTANT**: Before writing any commits, analyze the recent git history to determine the project's commit style:
-
-- **Check for Conventional Commits**: Look for patterns like `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `style:`, `perf:`, `ci:`, `build:`
-- **Match the existing style**: If 80% or more of recent commits follow conventional commits, use that format
-- **Be consistent**: Match the capitalization, punctuation, and structure of existing commits
-
-### Conventional Commits Format
-
-If the project uses conventional commits, follow this structure:
+Use this subject format for every commit:
 
 ```
-<type>[(optional scope)]: <description>
-
-[optional body]
-
-[optional footer(s)]
+{subsystem}: {commit title}
 ```
 
-**Common types:**
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, missing semicolons, etc.)
-- `refactor`: Code changes that neither fix bugs nor add features
-- `perf`: Performance improvements
-- `test`: Adding or updating tests
-- `build`: Changes to build system or dependencies
-- `ci`: Changes to CI configuration
-- `chore`: Other changes that don't modify src or test files
+Examples:
 
-**Examples:**
-- `feat: add user authentication`
-- `fix: resolve null pointer in login handler`
-- `docs: update API documentation`
-- `refactor(auth): simplify token validation logic`
+- `cuda-101: Add SGEMM CMake sample`
+- `tcp-close-wait: Add Go client reconnect loop`
+- `attention: Remove unused helper`
+
+Before writing commits, inspect recent history to choose a subsystem that
+matches the project. Prefer an existing subsystem prefix when one clearly
+applies. If no existing prefix applies, choose the shortest accurate subsystem
+name from the changed path or module.
+
+### Body Format
+
+Write the body as one paragraph:
+
+- Do not leave blank lines inside the body.
+- Wrap body lines so no line exceeds 75 characters.
+- Explain what changed and why; avoid repeating implementation details that are
+  obvious from the diff.
+- Keep the body only when it adds useful context.
+
+### Signed-Off Commits
+
+Always commit with `-s`:
+
+```
+git commit -s
+```
+
+The sign-off trailer is separate from the body and is added by Git.
 
 ## Git Commit Message Best Practices
 
-Follow these seven rules for excellent commit messages (adjust for conventional commits if used):
+Follow these rules for excellent commit messages:
 
 1. **Separate subject from body with a blank line** - Critical for readability
-2. **Limit subject line to 50 characters** - Forces concise summaries
-3. **Capitalize the subject line** - Consistent formatting
+2. **Use `{subsystem}: {commit title}` for the subject** - Keeps history scannable
+3. **Keep the subject concise** - Prefer one clear change summary
 4. **Do not end subject line with a period** - It's a title, not a sentence
 5. **Use imperative mood in subject** - "Add feature" not "Added feature"
    - Test: Subject should complete "If applied, this commit will _____"
-6. **Wrap body at 72 characters** - Ensures readability in terminals
-7. **Use body to explain what and why vs. how** - Code shows how, commit explains why
+6. **Wrap body at 75 characters** - Ensures readability in terminals
+7. **Use one body paragraph** - Do not put blank lines inside the body
+8. **Use body to explain what and why vs. how** - Code shows how, commit explains why
+9. **Always commit with `git commit -s`** - Add a Signed-off-by trailer
 
 ### Message Structure
 
 ```
-<subject: concise summary, imperative, capitalized, no period>
+<subsystem>: <concise title, imperative, no period>
 
-<body: explain the motivation for the change and contrast with previous behavior>
+<body: one paragraph, wrapped at 75 characters, no blank lines inside>
 
-<footer: references to issues, breaking changes, etc.>
+<Signed-off-by trailer added by git commit -s>
 ```
 
 ### Key Principles
@@ -117,51 +122,53 @@ Follow these seven rules for excellent commit messages (adjust for conventional 
 
 ### Examples
 
-**Good Examples (Traditional Style):**
-- `Refactor subsystem X for readability`
-- `Remove deprecated methods from UserService`
-- `Fix null pointer exception in login handler`
-- `Add user authentication middleware`
-
-**Good Examples (Conventional Commits):**
-- `feat: add user authentication middleware`
-- `fix: resolve null pointer exception in login handler`
-- `refactor: improve subsystem X readability`
-- `chore: remove deprecated methods from UserService`
+**Good Examples:**
+- `cuda-101: Add SGEMM CMake sample`
+- `auth: Fix null pointer in login handler`
+- `docs: Update API examples`
+- `tcp-close-wait: Remove stale binaries`
 
 **Bad Examples:**
 - `fixed stuff`
 - `Changes`
 - `wip`
 - `Update file.js`
-- `feat added new feature` (incorrect format - missing colon)
+- `Add user authentication middleware` (missing subsystem)
+- `feat added new feature` (incorrect format)
 
 ## Implementation Steps
 
 1. Run `git status` to see current state
 2. Run `git diff HEAD` to see all changes
 3. Run `git log --oneline -20` to analyze recent commit style
-   - **Determine if conventional commits are used** (look for `type:` prefix patterns)
-   - Note the typical capitalization and formatting style
+   - Identify existing subsystem prefixes
+   - Note the typical capitalization and wording style
    - Identify any project-specific conventions
 4. Identify logical groupings of changes
 5. For each logical group:
    - Stage the relevant changes (use `git add -p` if needed)
-   - Create a commit with a well-formatted message **matching the project's style**
+   - Create a signed-off commit with `git commit -s`
+   - Use the subject format `{subsystem}: {commit title}`
+   - Use one body paragraph wrapped at 75 characters when a body is useful
    - Verify the commit with `git show`
 6. After all commits, run `git status` to verify nothing important was missed
 
 ## Reference Documentation
 
-For detailed information on conventional commits, see:
-- [Conventional Commits Reference](references/conventional-commits.md) - Complete specification and examples
+For conventional commit details, see:
+- [Conventional Commits Reference](references/conventional-commits.md)
+
+This skill intentionally prefers `{subsystem}: {commit title}` over
+conventional commit type prefixes unless the user explicitly requests
+conventional commits.
 
 ## Notes
 
-- **ALWAYS check recent git history first** to determine if conventional commits are used
+- **ALWAYS check recent git history first** to determine subsystem names
 - **Match the project's existing style** - consistency is more important than personal preference
+- Always use `git commit -s`
 - DO NOT push to remote unless explicitly asked
 - Always verify authorship and commit details before amending
 - Use `git add -p` for interactive staging when files contain multiple unrelated changes
 - Keep commits focused and atomic - one logical change per commit
-- If in doubt about whether to use conventional commits, look at the last 20-30 commits for patterns
+- If in doubt about the subsystem, choose the shortest changed path/module name
