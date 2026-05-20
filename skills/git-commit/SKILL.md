@@ -1,6 +1,11 @@
 ---
 name: git-commit
-description: Use for commit-related git workflows, including creating, staging, reviewing, amending, or preparing git commits. Applies when the user asks to commit changes, run /commit, create signed-off commits, write commit messages, split changes into atomic commits, inspect git status/diff for commit planning, or use git add/git commit workflows.
+description: >-
+  Always use this skill for git commit work. Trigger when the user asks to
+  commit, git commit, commit my changes, make a commit, stage and commit, run
+  /commit, create a signed-off commit, amend a commit, split commits, write or
+  review a commit message, inspect git status/diff/log for commit planning, or
+  use git add/git commit workflows.
 allowed-tools:
   - Bash(git:*)
   - Read
@@ -18,6 +23,9 @@ Create atomic, signed-off commits with `{subsystem}: {Title}` messages.
 2. **Group** — split unrelated changes across commits. Use `git add -p` when
    one file contains multiple logical changes.
 3. **Commit** — always `git commit -s`. One logical change per commit.
+   Before committing, check the literal message text for the two common
+   failures: any handwritten line over 75 columns, and blank lines inserted
+   between sentences that belong in the same paragraph.
 4. **Verify** — `git show` the commit, then `git status` to confirm nothing
    important was left behind.
 
@@ -26,8 +34,8 @@ Create atomic, signed-off commits with `{subsystem}: {Title}` messages.
 ```
 <subsystem>: <Title in imperative mood, no trailing period>
 
-<Body explaining WHY (required), wrapped at 75 columns. Use blank lines
-to separate additional paragraphs.>
+<Body explaining WHY (required), wrapped at 75 columns. Keep related
+sentences in one paragraph; use blank lines only between paragraphs.>
 
 Signed-off-by: ...   (added automatically by -s)
 ```
@@ -40,13 +48,17 @@ Hard rules:
   "If applied, this commit will ___".
 - No period at end of subject.
 - Blank line between subject and body.
-- **Body lines wrap at ≤ 75 columns** — pass the message via a heredoc or
-  multiple `-m` flags with newlines already in place. Do not rely on the
-  terminal to wrap.
+- **No handwritten line may exceed 75 columns**: subject and body included.
+  Count the literal message before committing; do not rely on the terminal,
+  editor, or Git to wrap it after the fact.
 - **Body is required on every commit.** Even small changes get at least one
   sentence stating *why* the change was made.
-- Multiple paragraphs are allowed; **separate paragraphs with a single blank
-  line**. Do not put blank lines inside a paragraph.
+- Prefer a heredoc or message file when committing. If using `-m`, keep a
+  whole paragraph in one body `-m` value. Do not use one `-m` per sentence,
+  because Git inserts blank lines between separate `-m` values.
+- Multiple paragraphs are allowed only for distinct topics; separate paragraphs
+  with a single blank line. **Do not put a blank line between sentences in the
+  same paragraph.**
 
 ## Subsystem
 
@@ -65,11 +77,15 @@ Good:
 - `cuda-101: Add SGEMM CMake sample`
 - `auth: Fix null pointer in login handler`
 - `docs: Update API examples`
+- Body: `Keep adjacent sentences together in one wrapped paragraph. Add a
+  blank line only when starting a distinct paragraph.`
 
 Bad:
 - `fixed stuff` / `wip` / `Changes`
 - `Update file.js` — missing subsystem
 - `feat: added new feature` — wrong format and past tense
+- Body sentences separated by an empty line — creates fake paragraphs.
+- Any subject or handwritten body line longer than 75 columns.
 
 ## Reminders
 
