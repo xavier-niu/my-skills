@@ -18,24 +18,31 @@ Create atomic, signed-off commits with `{subsystem}: {Title}` messages.
 
 ## Process
 
-1. **Inspect** — `git status`, `git diff HEAD`, `git log --oneline -20`. From
-   the log, pick up the project's subsystem names, capitalization, and tone.
+1. **Inspect** — `git status`, `git diff --stat HEAD`, `git diff HEAD`, and
+   `git log --oneline -20`. From the log, pick up the project's subsystem
+   names, capitalization, and tone. For a large diff, map its semantic changes
+   and inspect key hunks instead of judging complexity from line count alone.
 2. **Group** — split unrelated changes across commits. Use `git add -p` when
    one file contains multiple logical changes.
-3. **Commit** — always `git commit -s`. One logical change per commit.
+3. **Draft** — explain the motivation and major mechanism. Include
+   compatibility or operational impact when material. Keep the body concise,
+   but let genuinely large or architecturally complex changes carry enough
+   context to remain useful to a future maintainer.
+4. **Commit** — always `git commit -s`. One logical change per commit.
    Before committing, check the literal message text for the two common
    failures: any handwritten line over 75 columns, and blank lines inserted
    between sentences that belong in the same paragraph.
-4. **Verify** — `git show` the commit, then `git status` to confirm nothing
-   important was left behind.
+5. **Verify** — compare the message with the diff for accurate semantic
+   coverage, then run `git show` and `git status` to confirm nothing important
+   was left behind.
 
 ## Message Format
 
 ```
 <subsystem>: <Title in imperative mood, no trailing period>
 
-<Body explaining WHY (required), wrapped at 75 columns. Keep related
-sentences in one paragraph; use blank lines only between paragraphs.>
+<Body explaining the motivation and major mechanism (required). Add
+compatibility or operational impact when material. Wrap at 75 columns.>
 
 Signed-off-by: ...   (added automatically by -s)
 ```
@@ -53,6 +60,12 @@ Hard rules:
   editor, or Git to wrap it after the fact.
 - **Body is required on every commit.** Even small changes get at least one
   sentence stating *why* the change was made.
+- Use no fixed body template or paragraph count. Keep it concise by default and
+  expand it only when the change is genuinely large or architecturally complex.
+- Judge message depth by semantic scope, not line count alone. Do not omit a
+  major mechanism merely to make a large change sound simple.
+- Include only architectural facts useful to a future maintainer. Do not
+  enumerate files, functions, or every affected subsystem.
 - Prefer a heredoc or message file when committing. If using `-m`, keep a
   whole paragraph in one body `-m` value. Do not use one `-m` per sentence,
   because Git inserts blank lines between separate `-m` values.
@@ -77,13 +90,15 @@ Good:
 - `cuda-101: Add SGEMM CMake sample`
 - `auth: Fix null pointer in login handler`
 - `docs: Update API examples`
-- Body: `Keep adjacent sentences together in one wrapped paragraph. Add a
-  blank line only when starting a distinct paragraph.`
+- Body: `Prevent readers from observing mixed cache generations. Reuse the
+  existing generation marker while rebuilding the index.`
 
 Bad:
 - `fixed stuff` / `wip` / `Changes`
 - `Update file.js` — missing subsystem
 - `feat: added new feature` — wrong format and past tense
+- `Update several files and refactor functions` — implementation inventory,
+  not motivation or mechanism.
 - Body sentences separated by an empty line — creates fake paragraphs.
 - Any subject or handwritten body line longer than 75 columns.
 
