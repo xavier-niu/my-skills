@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub CLI"
+  short_description: "Route GitHub operations through the gh CLI"
+  default_prompt: "Use $github-cli to handle this GitHub repository task with gh."
