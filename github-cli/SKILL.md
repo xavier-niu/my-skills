@@ -1,42 +1,55 @@
 ---
 name: github-cli
 description: >-
-  Use for tasks that target GitHub or GitHub Enterprise, a repository whose
-  remote is GitHub-hosted, or the GitHub CLI (`gh`). Trigger for GitHub pull
-  requests, issues, checks, Actions, releases, repository metadata,
-  authentication, and API queries. Route by the actual remote hostname,
-  prefer `gh` for GitHub service operations, retain `git` for native version
-  control, and do not use `gh` with non-GitHub hosting providers.
+  Use for GitHub or GitHub Enterprise service operations and explicit GitHub
+  CLI (`gh`) requests: pull requests, issues, comments, reviews, checks,
+  Actions, releases, repository metadata or settings, authentication, and API
+  queries. Do not trigger merely because a Git remote is GitHub-hosted. Use
+  `git`, never `gh`, for native Git operations such as clone, remote, fetch,
+  pull, push, checkout, branch, tag, log, diff, merge, and rebase.
 ---
 
 # GitHub CLI
 
-Use `gh` as the primary interface to GitHub services without replacing
-ordinary Git operations.
+Use `gh` only for GitHub's service layer. Use `git` for every native Git
+operation, even when the repository is hosted on GitHub.
+
+## Keep the tool boundary strict
+
+| Operation | Tool |
+|---|---|
+| Working tree, history, remotes, branches, tags, clone, fetch, pull, push, checkout, merge, and rebase | `git` |
+| Pull requests, issues, comments, reviews, checks, Actions, releases, repository settings, and GitHub API calls | `gh` |
+
+If local repository state or the Git transport can perform the operation, use
+`git`. Use `gh` only when the task requires a GitHub service object or API.
+Do not run `gh auth status` before a Git operation; Git's SSH or HTTPS
+credentials are independent of GitHub CLI authentication.
 
 ## Route by hosting provider
 
-1. Resolve the target repository from an explicit URL or repository selector.
-   Otherwise inspect `git remote get-url origin`; if `origin` is absent or
-   ambiguous, inspect `git remote -v`.
-2. Classify by the actual hostname, not the organization or repository owner.
-   Treat `github.com` and configured GitHub Enterprise instances as GitHub.
-   For example, `github.com/alibaba/project` is GitHub-hosted, while an
-   Alibaba or Ant internal host running another platform is not.
-3. Use `gh` only when the target is a GitHub host. For another provider, use
-   its supported CLI or API, or use plain `git` for Git-level operations.
-4. When multiple repositories or hosts are possible, target the repository
-   explicitly with `--repo [HOST/]OWNER/REPO`. Check authentication with
-   `gh auth status --hostname HOST` when authentication is relevant.
+1. Determine whether the request is a Git operation, a GitHub service
+   operation, or a mixed task before checking GitHub CLI authentication.
+2. For a Git operation, use `git` only and let Git use its configured SSH or
+   HTTPS credentials.
+3. For a GitHub service operation, resolve the target from an explicit URL or
+   repository selector. Otherwise inspect `git remote get-url origin`; if
+   `origin` is absent or ambiguous, inspect `git remote -v`.
+4. Classify the actual hostname, not the organization or repository owner.
+   Use `gh` only for `github.com` or a configured GitHub Enterprise host.
+5. When multiple repositories or hosts are possible, pass
+   `--repo [HOST/]OWNER/REPO`. Check `gh` authentication only when a relevant
+   GitHub service command needs it or fails authentication.
 
 ## Choose the correct interface
 
-- Prefer `gh` for pull requests, issues, checks, Actions runs and workflows,
-  releases, GitHub repository metadata, authentication, and GitHub API calls.
-- Prefer `git` for working-tree state, commits, branches, history, diffs,
-  fetch, pull, push, merge, and rebase.
-- Use `gh pr checkout` when a pull request identity should drive the checkout;
-  inspect `git status` first and preserve unrelated local changes.
+- Use `gh` for pull requests, issues, comments, reviews, checks, Actions runs
+  and workflows, releases, GitHub repository metadata or settings,
+  authentication, and GitHub API calls.
+- Use `git` for status, add, commit, remote inspection, clone, fetch, pull,
+  push, checkout, branch, tag, log, diff, merge, and rebase.
+- For mixed tasks, use each tool only for its own layer. A stale or missing
+  `gh` login does not block Git operations when Git credentials work.
 - Use `gh help`, `gh <command> --help`, or the current GitHub CLI manual when
   syntax or behavior is uncertain. Do not rely on recalled flags when local
   help can verify them.

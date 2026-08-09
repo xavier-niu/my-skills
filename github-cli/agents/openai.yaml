@@ -1,4 +1,4 @@
 interface:
   display_name: "GitHub CLI"
-  short_description: "Route GitHub operations through the gh CLI"
-  default_prompt: "Use $github-cli to handle this GitHub repository task with gh."
+  short_description: "Use gh for GitHub services, not Git operations"
+  default_prompt: "Use $github-cli for this GitHub service task while keeping native Git operations on git."
