@@ -23,18 +23,23 @@ Create atomic, signed-off commits with `{subsystem}: {Title}` messages.
    names, capitalization, and tone. For a large diff, map its semantic changes
    and inspect key hunks instead of judging complexity from line count alone.
 2. **Group** — split unrelated changes across commits. Use `git add -p` when
-   one file contains multiple logical changes.
+   one file contains multiple logical changes. For mixed refactoring,
+   dependency, or behavior changes, read
+   [references/ATOMIC_COMMITS.md](references/ATOMIC_COMMITS.md).
 3. **Draft** — explain the motivation and major mechanism. Include
    compatibility or operational impact when material. Keep the body concise,
    but let genuinely large or architecturally complex changes carry enough
-   context to remain useful to a future maintainer.
+   context to remain useful to a future maintainer. Read
+   [references/COMMIT_FORMAT.md](references/COMMIT_FORMAT.md) when the message
+   needs URLs, issue references, trailers, or multiple paragraphs.
 4. **Commit** — always `git commit -s`. One logical change per commit.
    Before committing, check the literal message text for the two common
    failures: any handwritten line over 75 columns, and blank lines inserted
    between sentences that belong in the same paragraph.
 5. **Verify** — compare the message with the diff for accurate semantic
    coverage, then run `git show` and `git status` to confirm nothing important
-   was left behind.
+   was left behind. When a draft is vague, bundled, or difficult to format,
+   check [references/COMMON_MISTAKES.md](references/COMMON_MISTAKES.md).
 
 ## Message Format
 
@@ -83,6 +88,18 @@ This skill uses `{subsystem}:` prefixes, not Conventional Commit types
 (`feat:`, `fix:`, etc.), unless the user explicitly asks for them. See
 [references/conventional-commits.md](references/conventional-commits.md) if
 they do.
+
+## Reference precedence
+
+The rules in this `SKILL.md` always override bundled references. In
+particular, keep the `{subsystem}: {Title}` subject, the 75-character limit,
+the required body, and the mandatory `Signed-off-by` trailer added by
+`git commit -s`.
+
+The three uppercase references adapt GitLab's `commit-messages` skill. They
+add edge-case and review guidance without importing its conflicting no-prefix,
+72-character, or optional-body defaults. Attribution and license terms are in
+[`LICENSES/GitLab-commit-messages.txt`](LICENSES/GitLab-commit-messages.txt).
 
 ## Examples
 
