@@ -1,66 +1,45 @@
 ---
 name: github-cli
 description: >-
-  Use for GitHub or GitHub Enterprise service operations and explicit GitHub
-  CLI (`gh`) requests: pull requests, issues, comments, reviews, checks,
-  Actions, releases, repository metadata or settings, authentication, and API
-  queries. Do not trigger merely because a Git remote is GitHub-hosted. Use
-  `git`, never `gh`, for native Git operations such as clone, remote, fetch,
-  pull, push, checkout, branch, tag, log, diff, merge, and rebase.
+  Use `gh` for GitHub and GitHub Enterprise service tasks or explicit CLI
+  requests. GitHub-hosted Git operations alone do not trigger this skill.
 ---
 
 # GitHub CLI
 
-Use `gh` only for GitHub's service layer. Use `git` for every native Git
-operation, even when the repository is hosted on GitHub.
+## Tool boundary
 
-## Keep the tool boundary strict
+Use `git` for every native Git operation, including clone, fetch, pull, push,
+checkout, branch, tag, history, diff, merge, and rebase. Use `gh` for GitHub
+service objects and APIs: pull requests, issues, comments, reviews, checks,
+Actions, releases, repository metadata or settings, and CLI authentication.
+For mixed tasks, use each tool for its own layer.
 
-| Operation | Tool |
-|---|---|
-| Working tree, history, remotes, branches, tags, clone, fetch, pull, push, checkout, merge, and rebase | `git` |
-| Pull requests, issues, comments, reviews, checks, Actions, releases, repository settings, and GitHub API calls | `gh` |
+## Target and authentication
 
-If local repository state or the Git transport can perform the operation, use
-`git`. Use `gh` only when the task requires a GitHub service object or API.
-Do not run `gh auth status` before a Git operation; Git's SSH or HTTPS
-credentials are independent of GitHub CLI authentication.
+Use the supplied URL or repository selector. When the target is not established,
+inspect `git remote get-url origin`, then `git remote -v` if needed. Identify
+GitHub by the actual hostname, not the organization or repository owner; use
+`gh` for `github.com` or a configured GitHub Enterprise host. When multiple
+repositories or hosts are possible, select the intended target explicitly with
+`--repo [HOST/]OWNER/REPO` where supported.
 
-## Route by hosting provider
+Check `gh` authentication only when a relevant service command needs it or
+fails authentication. Do not run `gh auth status` before Git operations:
+Git uses its configured SSH or HTTPS credentials independently, so a missing
+or stale `gh` login does not block working Git credentials.
 
-1. Determine whether the request is a Git operation, a GitHub service
-   operation, or a mixed task before checking GitHub CLI authentication.
-2. For a Git operation, use `git` only and let Git use its configured SSH or
-   HTTPS credentials.
-3. For a GitHub service operation, resolve the target from an explicit URL or
-   repository selector. Otherwise inspect `git remote get-url origin`; if
-   `origin` is absent or ambiguous, inspect `git remote -v`.
-4. Classify the actual hostname, not the organization or repository owner.
-   Use `gh` only for `github.com` or a configured GitHub Enterprise host.
-5. When multiple repositories or hosts are possible, pass
-   `--repo [HOST/]OWNER/REPO`. Check `gh` authentication only when a relevant
-   GitHub service command needs it or fails authentication.
+Use `gh help`, `gh <command> --help`, or the current GitHub CLI manual when
+syntax or behavior is uncertain.
 
-## Choose the correct interface
+## Authorization and state
 
-- Use `gh` for pull requests, issues, comments, reviews, checks, Actions runs
-  and workflows, releases, GitHub repository metadata or settings,
-  authentication, and GitHub API calls.
-- Use `git` for status, add, commit, remote inspection, clone, fetch, pull,
-  push, checkout, branch, tag, log, diff, merge, and rebase.
-- For mixed tasks, use each tool only for its own layer. A stale or missing
-  `gh` login does not block Git operations when Git credentials work.
-- Use `gh help`, `gh <command> --help`, or the current GitHub CLI manual when
-  syntax or behavior is uncertain. Do not rely on recalled flags when local
-  help can verify them.
+Use read-only commands for reviews and investigations. Perform external
+mutations within the user's requested scope; authorization already provided
+in the conversation remains sufficient, so do not request it again for the
+same action. Posting comments or reviews requires explicit authorization to
+publish them; a request to review alone does not provide that authorization.
 
-## Protect state
-
-- Begin review and investigation with read-only commands such as `view`,
-  `list`, `status`, `diff`, and API GET requests.
-- Perform external mutations such as commenting, editing, closing, merging,
-  releasing, triggering workflows, rerunning jobs, or cancelling runs only
-  when the user requests them.
-- Do not use force options that reset branches or overwrite state unless the
-  user explicitly authorizes the destructive effect.
-- Never print, store, or expose authentication tokens.
+Use force options that reset branches or overwrite state only when the user
+explicitly authorizes the destructive effect. Never print, store, or expose
+authentication tokens.
