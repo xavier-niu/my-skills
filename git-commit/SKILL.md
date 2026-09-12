@@ -1,11 +1,8 @@
 ---
 name: git-commit
 description: >-
-  Always use this skill for git commit work. Trigger when the user asks to
-  commit, git commit, commit my changes, make a commit, stage and commit, run
-  /commit, create a signed-off commit, amend a commit, split commits, write or
-  review a commit message, inspect git status/diff/log for commit planning, or
-  use git add/git commit workflows.
+  Create atomic, signed-off Git commits. Use for staging, committing,
+  amending, splitting commits, or drafting and reviewing commit messages.
 allowed-tools:
   - Bash(git:*)
   - Read
@@ -16,111 +13,65 @@ allowed-tools:
 
 Create atomic, signed-off commits with `{subsystem}: {Title}` messages.
 
-## Process
+## Workflow
 
-1. **Inspect** — `git status`, `git diff --stat HEAD`, `git diff HEAD`, and
-   `git log --oneline -20`. From the log, pick up the project's subsystem
-   names, capitalization, and tone. For a large diff, map its semantic changes
-   and inspect key hunks instead of judging complexity from line count alone.
-2. **Group** — split unrelated changes across commits. Use `git add -p` when
-   one file contains multiple logical changes. For mixed refactoring,
-   dependency, or behavior changes, read
-   [references/ATOMIC_COMMITS.md](references/ATOMIC_COMMITS.md).
-3. **Draft** — explain the motivation and major mechanism. Include
-   compatibility or operational impact when material. Keep the body concise,
-   but let genuinely large or architecturally complex changes carry enough
-   context to remain useful to a future maintainer. Read
-   [references/COMMIT_FORMAT.md](references/COMMIT_FORMAT.md) when the message
-   needs URLs, issue references, trailers, or multiple paragraphs.
-4. **Commit** — always `git commit -s`. One logical change per commit.
-   Before committing, check the literal message text for the two common
-   failures: any handwritten line over 75 columns, and blank lines inserted
-   between sentences that belong in the same paragraph.
-5. **Verify** — compare the message with the diff for accurate semantic
-   coverage, then run `git show` and `git status` to confirm nothing important
-   was left behind. When a draft is vague, bundled, or difficult to format,
-   check [references/COMMON_MISTAKES.md](references/COMMON_MISTAKES.md).
+Inspect the working tree, staged changes, and enough recent history to
+understand the change and choose a subsystem. Scale inspection to semantic
+scope; a large line count alone does not imply a complex change.
 
-## Message Format
+Group changes by motivation, keeping each commit independently useful and
+reversible. Use `git add -p` for mixed changes within a file. Preserve unrelated
+user changes and check `git diff --cached` against the intended commit.
 
+Draft the message using the rules below, then always run `git commit -s`.
+Check the literal message before committing; terminal wrapping does not count.
+Verify the resulting message and diff with `git show`, and use `git status`
+to confirm the intended remainder.
+
+## Message rules
+
+- Require a subsystem prefix. Choose an existing subsystem from history or
+  the shortest accurate name from the changed path or module, such as `auth`,
+  `docs`, or `cuda-101`. Repository style informs vocabulary and tone within
+  these rules; it does not replace the prefix with a Conventional Commit type.
+- Capitalize the title, use imperative mood, and omit a trailing period.
+- Limit every handwritten line to 75 columns, including the complete subject.
+- Include a body on every commit, separated from the subject by a blank line.
+  Explain the motivation and major mechanism. Add compatibility or operational
+  impact when material. Scale detail to semantic scope without inventorying
+  files or functions or imposing a fixed paragraph count.
+- Keep related sentences in one paragraph; separate distinct topics with a
+  single blank line. Prefer a message file or heredoc. With `-m`, use one value
+  per paragraph because Git inserts blank lines between values.
+- Let Git add the sign-off from its configured identity; do not invent an
+  identity or duplicate the trailer.
+
+```text
+auth: Fix session expiration race
+
+Requests could observe a session expiring during validation and return an
+intermittent 401. Reuse the grace period while an active request completes.
+
+Signed-off-by: Author Name <author@example.com>
 ```
-<subsystem>: <Title in imperative mood, no trailing period>
 
-<Body explaining the motivation and major mechanism (required). Add
-compatibility or operational impact when material. Wrap at 75 columns.>
+Never push unless explicitly asked. Verify authorship and commit hash before
+amending.
 
-Signed-off-by: ...   (added automatically by -s)
-```
+## References
 
-Hard rules:
+Read only the reference needed for the task. These references supplement the
+rules above.
 
-- Subject ≤ 75 chars total (including the `subsystem: ` prefix). Shorten the
-  title or pick a tighter subsystem rather than overflow.
-- Imperative mood — "Add X", not "Added X" or "Adds X". Test: subject completes
-  "If applied, this commit will ___".
-- No period at end of subject.
-- Blank line between subject and body.
-- **No handwritten line may exceed 75 columns**: subject and body included.
-  Count the literal message before committing; do not rely on the terminal,
-  editor, or Git to wrap it after the fact.
-- **Body is required on every commit.** Even small changes get at least one
-  sentence stating *why* the change was made.
-- Use no fixed body template or paragraph count. Keep it concise by default and
-  expand it only when the change is genuinely large or architecturally complex.
-- Judge message depth by semantic scope, not line count alone. Do not omit a
-  major mechanism merely to make a large change sound simple.
-- Include only architectural facts useful to a future maintainer. Do not
-  enumerate files, functions, or every affected subsystem.
-- Prefer a heredoc or message file when committing. If using `-m`, keep a
-  whole paragraph in one body `-m` value. Do not use one `-m` per sentence,
-  because Git inserts blank lines between separate `-m` values.
-- Multiple paragraphs are allowed only for distinct topics; separate paragraphs
-  with a single blank line. **Do not put a blank line between sentences in the
-  same paragraph.**
+- [Atomic commits](references/ATOMIC_COMMITS.md): mixed refactoring,
+  dependency, or behavior changes that need careful commit boundaries.
+- [Commit format](references/COMMIT_FORMAT.md): URLs, issue references, and
+  additional trailers.
+- [Common mistakes](references/COMMON_MISTAKES.md): uncertain message coverage
+  or commit boundaries.
+- [Conventional Commits](references/conventional-commits.md): only when the
+  user explicitly requests overriding the subsystem format.
 
-## Subsystem
-
-Prefer an existing prefix from recent history. Otherwise use the shortest
-accurate name derived from the changed path or module. Examples: `auth`,
-`docs`, `services`, `cuda-101`, `tcp-close-wait`.
-
-This skill uses `{subsystem}:` prefixes, not Conventional Commit types
-(`feat:`, `fix:`, etc.), unless the user explicitly asks for them. See
-[references/conventional-commits.md](references/conventional-commits.md) if
-they do.
-
-## Reference precedence
-
-The rules in this `SKILL.md` always override bundled references. In
-particular, keep the `{subsystem}: {Title}` subject, the 75-character limit,
-the required body, and the mandatory `Signed-off-by` trailer added by
-`git commit -s`.
-
-The three uppercase references adapt GitLab's `commit-messages` skill. They
-add edge-case and review guidance without importing its conflicting no-prefix,
-72-character, or optional-body defaults. Attribution and license terms are in
-[`LICENSES/GitLab-commit-messages.txt`](LICENSES/GitLab-commit-messages.txt).
-
-## Examples
-
-Good:
-- `cuda-101: Add SGEMM CMake sample`
-- `auth: Fix null pointer in login handler`
-- `docs: Update API examples`
-- Body: `Prevent readers from observing mixed cache generations. Reuse the
-  existing generation marker while rebuilding the index.`
-
-Bad:
-- `fixed stuff` / `wip` / `Changes`
-- `Update file.js` — missing subsystem
-- `feat: added new feature` — wrong format and past tense
-- `Update several files and refactor functions` — implementation inventory,
-  not motivation or mechanism.
-- Body sentences separated by an empty line — creates fake paragraphs.
-- Any subject or handwritten body line longer than 75 columns.
-
-## Reminders
-
-- Never push to remote unless explicitly asked.
-- Verify authorship and commit hash before amending.
-- Match the project's existing style — consistency beats personal preference.
+The three uppercase references adapt GitLab's `commit-messages` skill.
+Attribution and license terms are in
+[LICENSES/GitLab-commit-messages.txt](LICENSES/GitLab-commit-messages.txt).

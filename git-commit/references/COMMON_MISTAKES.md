@@ -1,66 +1,33 @@
 # Common commit mistakes
 
-Use this checklist before committing when a message or commit boundary is
-uncertain. Resolve every applicable red flag against `../SKILL.md`.
+Use this reference when message coverage or commit boundaries are uncertain.
+Apply the message rules in [SKILL.md](../SKILL.md) without repeating a full
+review for a straightforward commit.
 
-## Subject red flags
+## Message coverage
 
-- [ ] The required `<subsystem>: ` prefix is missing or inaccurate.
-- [ ] The title after the colon starts with a lowercase letter.
-- [ ] The title uses past tense (`Fixed`, `Added`) or a present participle
-      (`Fixing`, `Adding`) instead of imperative mood.
-- [ ] The subject ends with a period.
-- [ ] The complete subject exceeds 75 characters.
-- [ ] The subject is vague, such as `Update stuff`, `Fix bug`, or `WIP`.
-- [ ] The subject is only an issue reference.
-- [ ] The subject uses `and` to bundle independent changes.
-- [ ] A Conventional Commit type appears without an explicit user request.
+A subject such as `auth: Update stuff` or `auth: Fix #847` does not explain the
+behavior. Name the change and put issue references after the body. A body
+that says only "Changed X to Y" should explain why X failed or why Y is needed.
+Do not guess motivation, limitations, or compatibility claims.
 
-## Body and trailer red flags
+When a draft is vague in several places, rewrite it from the diff's motivation
+rather than patching individual words. Compare it with the staged diff so it
+covers the major mechanism and makes no claims about unstaged work.
 
-- [ ] There is no blank line between subject and body.
-- [ ] The required body is missing.
-- [ ] The body only lists what changed and gives no motivation.
-- [ ] The body inventories files, functions, or implementation trivia.
-- [ ] Related sentences are split into artificial one-sentence paragraphs.
-- [ ] A handwritten line exceeds 75 characters.
-- [ ] An issue number, URL, limitation, or compatibility claim was guessed.
-- [ ] A closing keyword claims to resolve an issue the commit does not fix.
-- [ ] An issue reference appears in the subject instead of after the body.
-- [ ] The `Signed-off-by` trailer is missing, duplicated, or uses an identity
-      other than the one Git would add with `git commit -s`.
+## Commit boundaries
 
-## Scope red flags
+A subject containing `and` is a warning only when it joins independent changes.
+Refactoring, formatting, dependency churn, and cleanup may obscure a behavior
+change that could stand alone. Keep required tests and documentation with the
+change they support.
 
-- [ ] The staged diff contains more than one motivation.
-- [ ] Refactoring, formatting, dependency churn, or cleanup obscures a
-      functional change that could stand alone.
-- [ ] Tests or documentation necessary for the change were left for an
-      unrelated later commit.
-- [ ] Unrelated user changes were staged because they were nearby.
-- [ ] The commit cannot be reverted without also reverting independent work.
+When the staged change bundles independent work, regroup the relevant hunks
+without discarding unrelated changes. Consult [ATOMIC_COMMITS.md](ATOMIC_COMMITS.md)
+for difficult splits.
 
-## History and mutation red flags
+## History changes
 
-- [ ] The message ignores the repository's established subsystem vocabulary
-      or capitalization.
-- [ ] The commit amends an already-pushed shared commit without explicit
-      authorization and coordination.
-- [ ] A force option, reset, or cleanup would overwrite unrelated work.
-- [ ] The final `git show` does not match the message.
-- [ ] `git status` reveals important changes unintentionally left behind.
-
-## Corrections
-
-| Mistake | Correction |
-|---|---|
-| `Fixed the auth bug` | `auth: Fix null session validation` |
-| `auth: Update stuff` | Name the exact behavior or invariant changed |
-| `auth: Fix #847` | Describe the fix; put `Fixes #847` after the body |
-| Body says only “Changed X to Y” | Explain why X failed and why Y is needed |
-| Refactor and feature share one subject | Split when each is independently valid |
-| Missing sign-off | Commit with `git commit -s` |
-
-When a draft trips several checks, rewrite it from the diff's motivation rather
-than patching individual words. When the staged change trips several scope
-checks, unstage and regroup before drafting the message.
+Amending an already-pushed shared commit requires explicit authorization and
+coordination. Do not use a force option, reset, or cleanup that overwrites
+unrelated work.
