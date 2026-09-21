@@ -30,7 +30,7 @@ add_agent_root() {
   local root=$2
   local index
 
-  for index in "${!AGENT_ROOTS[@]}"; do
+  for index in ${AGENT_ROOTS[@]+"${!AGENT_ROOTS[@]}"}; do
     if [[ ${AGENT_ROOTS[$index]} == "$root" ]]; then
       return
     fi
@@ -89,10 +89,12 @@ read_skill_name() {
   printf '%s\n' "$name"
 }
 
-declare -A AGENTS_BY_SKILL=()
-declare -A PATHS_BY_SKILL=()
-declare -A SEEN_AGENT=()
-declare -A SEEN_PATH=()
+# Indexed arrays keep the inventory compatible with macOS Bash 3.2.
+declare -a SKILL_NAMES=()
+declare -a AGENTS_BY_SKILL=()
+declare -a PATHS_BY_SKILL=()
+declare -a SEEN_AGENT=()
+declare -a SEEN_PATH=()
 
 record_skill() {
   local skill_name=$1
@@ -101,27 +103,39 @@ record_skill() {
   local separator=$'\034'
   local agent_key="${skill_name}${separator}${agent_name}"
   local path_key="${skill_name}${separator}${install_path}"
+  local index=0
+  local key
+  local seen=0
 
-  if [[ -z ${SEEN_AGENT[$agent_key]+present} ]]; then
-    if [[ -n ${AGENTS_BY_SKILL[$skill_name]-} ]]; then
-      AGENTS_BY_SKILL[$skill_name]+=", $agent_name"
-    else
-      AGENTS_BY_SKILL[$skill_name]=$agent_name
-    fi
-    SEEN_AGENT[$agent_key]=1
+  while (( index < ${#SKILL_NAMES[@]} )); do
+    [[ ${SKILL_NAMES[$index]} == "$skill_name" ]] && break
+    index=$((index + 1))
+  done
+  if (( index == ${#SKILL_NAMES[@]} )); then
+    SKILL_NAMES+=("$skill_name")
+    AGENTS_BY_SKILL+=("")
+    PATHS_BY_SKILL+=("")
   fi
 
-  if [[ -z ${SEEN_PATH[$path_key]+present} ]]; then
-    if [[ -n ${PATHS_BY_SKILL[$skill_name]-} ]]; then
-      PATHS_BY_SKILL[$skill_name]+="; $install_path"
-    else
-      PATHS_BY_SKILL[$skill_name]=$install_path
-    fi
-    SEEN_PATH[$path_key]=1
+  for key in ${SEEN_AGENT[@]+"${SEEN_AGENT[@]}"}; do
+    [[ $key == "$agent_key" ]] && seen=1
+  done
+  if (( seen == 0 )); then
+    AGENTS_BY_SKILL[$index]+="${AGENTS_BY_SKILL[$index]:+, }$agent_name"
+    SEEN_AGENT+=("$agent_key")
+  fi
+
+  seen=0
+  for key in ${SEEN_PATH[@]+"${SEEN_PATH[@]}"}; do
+    [[ $key == "$path_key" ]] && seen=1
+  done
+  if (( seen == 0 )); then
+    PATHS_BY_SKILL[$index]+="${PATHS_BY_SKILL[$index]:+; }$install_path"
+    SEEN_PATH+=("$path_key")
   fi
 }
 
-for index in "${!AGENT_ROOTS[@]}"; do
+for index in ${AGENT_ROOTS[@]+"${!AGENT_ROOTS[@]}"}; do
   root=${AGENT_ROOTS[$index]}
   agent=${AGENT_NAMES[$index]}
 
@@ -145,28 +159,26 @@ if (( ${#AGENTS_BY_SKILL[@]} == 0 )); then
   exit 0
 fi
 
-mapfile -t SKILL_NAMES < <(
-  printf '%s\n' "${!AGENTS_BY_SKILL[@]}" | LC_ALL=C sort
-)
+name_width=4
+agent_width=13
 
-name_width=${#SKILL_NAMES[0]}
-agent_width=${#AGENTS_BY_SKILL[${SKILL_NAMES[0]}]}
-
-for skill_name in "${SKILL_NAMES[@]}"; do
+for index in "${!SKILL_NAMES[@]}"; do
+  skill_name=${SKILL_NAMES[$index]}
+  agents=${AGENTS_BY_SKILL[$index]}
   (( ${#skill_name} > name_width )) && name_width=${#skill_name}
-  agents=${AGENTS_BY_SKILL[$skill_name]}
   (( ${#agents} > agent_width )) && agent_width=${#agents}
 done
-
-(( name_width < 4 )) && name_width=4
-(( agent_width < 13 )) && agent_width=13
 
 printf '%-*s  %-*s  %s\n' \
   "$name_width" "NAME" "$agent_width" "CODING AGENTS" "INSTALLED PATHS"
 
-for skill_name in "${SKILL_NAMES[@]}"; do
-  printf '%-*s  %-*s  %s\n' \
-    "$name_width" "$skill_name" \
-    "$agent_width" "${AGENTS_BY_SKILL[$skill_name]}" \
-    "${PATHS_BY_SKILL[$skill_name]}"
-done
+while IFS= read -r skill_name; do
+  for index in "${!SKILL_NAMES[@]}"; do
+    [[ ${SKILL_NAMES[$index]} == "$skill_name" ]] || continue
+    printf '%-*s  %-*s  %s\n' \
+      "$name_width" "$skill_name" \
+      "$agent_width" "${AGENTS_BY_SKILL[$index]}" \
+      "${PATHS_BY_SKILL[$index]}"
+    break
+  done
+done < <(printf '%s\n' "${SKILL_NAMES[@]}" | LC_ALL=C sort)

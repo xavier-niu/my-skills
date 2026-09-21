@@ -61,7 +61,6 @@ local_skill_install_link() {
   local executable=$2
   local skill_root=$3
   local target="$skill_root/$SKILL_NAME"
-  local resolved
 
   if ! command -v "$executable" >/dev/null 2>&1; then
     printf 'Skipped %s: executable %s is absent.\n' \
@@ -72,8 +71,7 @@ local_skill_install_link() {
 
   mkdir -p "$skill_root"
   if [[ -L $target ]]; then
-    resolved=$(readlink -f -- "$target" 2>/dev/null || true)
-    if [[ $resolved == "$SKILL_DIR" ]]; then
+    if [[ $target -ef $SKILL_DIR ]]; then
       printf 'Installed %s: %s already points to this skill.\n' \
         "$agent_name" "$target"
       LOCAL_SKILL_INSTALLED=$((LOCAL_SKILL_INSTALLED + 1))
@@ -99,6 +97,7 @@ local_skill_install_link() {
 
 run_local_skill_installer() {
   local dependency
+  # Bash 3.2 treats empty arrays as unset under nounset; use guarded expansions.
   local -a dependency_args=()
 
   while (( $# > 0 )); do
@@ -156,8 +155,8 @@ run_local_skill_installer() {
   trap local_skill_cleanup EXIT
 
   local_skill_validate
-  for dependency in "${DEPENDENCIES[@]}"; do
-    local_skill_install_dependency "$dependency" "${dependency_args[@]}"
+  for dependency in ${DEPENDENCIES[@]+"${DEPENDENCIES[@]}"}; do
+    local_skill_install_dependency "$dependency" ${dependency_args[@]+"${dependency_args[@]}"}
   done
 
   local_skill_install_link "Codex" "codex" "$HOME/.agents/skills"

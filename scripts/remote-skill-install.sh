@@ -149,13 +149,13 @@ remote_skill_stage_update() {
   [[ -d $source_root ]] ||
     remote_skill_fail "remote skill path does not exist: $REMOTE_PATH"
 
-  for entry in "${REMOTE_INCLUDE_PATHS[@]}"; do
+  for entry in ${REMOTE_INCLUDE_PATHS[@]+"${REMOTE_INCLUDE_PATHS[@]}"}; do
     remote_skill_validate_relative_path "$entry"
     remote_skill_copy_entry "$source_root/$entry" \
       "$REMOTE_SKILL_PAYLOAD/$entry"
   done
 
-  for entry in "${REMOTE_ROOT_PATHS[@]}"; do
+  for entry in ${REMOTE_ROOT_PATHS[@]+"${REMOTE_ROOT_PATHS[@]}"}; do
     remote_skill_validate_relative_path "$entry"
     remote_skill_copy_entry "$clone_dir/$entry" \
       "$REMOTE_SKILL_PAYLOAD/$entry"
@@ -274,7 +274,6 @@ remote_skill_install_link() {
   local executable=$2
   local skill_root=$3
   local target="$skill_root/$SKILL_NAME"
-  local resolved
 
   if ! command -v "$executable" >/dev/null 2>&1; then
     printf 'Skipped %s: executable %s is absent.\n' \
@@ -285,8 +284,7 @@ remote_skill_install_link() {
 
   mkdir -p "$skill_root"
   if [[ -L $target ]]; then
-    resolved=$(readlink -f -- "$target" 2>/dev/null || true)
-    if [[ $resolved == "$SKILL_DIR" ]]; then
+    if [[ $target -ef $SKILL_DIR ]]; then
       printf 'Installed %s: %s already points to this skill.\n' \
         "$agent_name" "$target"
       REMOTE_SKILL_INSTALLED=$((REMOTE_SKILL_INSTALLED + 1))
@@ -314,6 +312,7 @@ run_remote_skill_installer() {
   local force=0
   local skip_update=0
   local dependency
+  # Bash 3.2 treats empty arrays as unset under nounset; use guarded expansions.
   local -a dependency_args=()
 
   while (( $# > 0 )); do
@@ -389,8 +388,8 @@ run_remote_skill_installer() {
     remote_skill_check_local_changes "$force"
   fi
 
-  for dependency in "${DEPENDENCIES[@]}"; do
-    remote_skill_install_dependency "$dependency" "${dependency_args[@]}"
+  for dependency in ${DEPENDENCIES[@]+"${DEPENDENCIES[@]}"}; do
+    remote_skill_install_dependency "$dependency" ${dependency_args[@]+"${dependency_args[@]}"}
   done
 
   if (( skip_update == 0 )); then
