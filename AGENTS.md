@@ -50,6 +50,7 @@ locations or network access.
 |---|---|---|
 | Codex | `command -v codex` | `$HOME/.agents/skills/<skill-name>` |
 | Claude Code | `command -v claude` | `$HOME/.claude/skills/<skill-name>` |
+| Antigravity | `command -v agy` | `$HOME/.gemini/config/skills/<skill-name>` |
 
 Install only for detected executables; skip absent agents. Use absolute links
 to the top-level repository skill. An existing link to that directory is an

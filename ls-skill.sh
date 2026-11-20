@@ -51,6 +51,12 @@ add_agent_root "Codex" "/etc/codex/skills"
 # Other supported coding-agent user locations.
 add_agent_root "Claude Code" "$HOME/.claude/skills"
 
+# Current Antigravity user location, followed by CLI-specific and legacy locations.
+add_agent_root "Antigravity" "$HOME/.gemini/config/skills"
+add_agent_root "Antigravity" "$HOME/.gemini/antigravity-cli/skills"
+add_agent_root "Antigravity" "$HOME/.gemini/antigravity/skills"
+add_agent_root "Antigravity" "$HOME/.gemini/skills"
+
 read_skill_name() {
   local skill_file=$1
   local name

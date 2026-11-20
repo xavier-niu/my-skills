@@ -161,6 +161,7 @@ run_local_skill_installer() {
 
   local_skill_install_link "Codex" "codex" "$HOME/.agents/skills"
   local_skill_install_link "Claude Code" "claude" "$HOME/.claude/skills"
+  local_skill_install_link "Antigravity" "agy" "$HOME/.gemini/config/skills"
 
   printf '%s\n' "$SKILL_NAME" >>"$MY_SKILLS_INSTALL_STATE"
   printf 'Summary: source=local skill=%s dependencies=%d installed=%d skipped=%d conflicts=%d\n' \

@@ -60,26 +60,29 @@ class InstallerTests(unittest.TestCase):
         self.assertTrue((link / "SKILL.md").is_file())
 
     def test_local_install_twice_and_inventory(self):
-        for agent in ("codex", "claude"):
+        for agent in ("codex", "claude", "agy"):
             self.stub(agent)
         before = self.snapshot("git-commit")
         for _ in range(2):
             self.run_script("git-commit/install.sh")
-            for agent in (".agents", ".claude"):
+            for agent in (".agents", ".claude", ".gemini/config"):
                 self.assert_link(agent, "git-commit")
         self.assertEqual(before, self.snapshot("git-commit"))
         output = self.run_script("ls-skill.sh")
         self.assertIn("git-commit", output)
-        self.assertIn("Codex, Claude Code", output)
+        self.assertIn("Codex, Claude Code, Antigravity", output)
 
     def test_absent_agents(self):
         output = self.run_script("git-commit/install.sh")
-        self.assertIn("installed=0 skipped=2", output)
+        self.assertIn("installed=0 skipped=3", output)
         self.assertIn("No installed skills", self.run_script("ls-skill.sh"))
         self.assertFalse((self.home / ".agents").exists())
+        self.assertFalse((self.home / ".claude").exists())
+        self.assertFalse((self.home / ".gemini").exists())
 
     def test_remote_dependency_and_local_flag_forwarding(self):
-        self.stub("codex")
+        for agent in ("codex", "agy"):
+            self.stub(agent)
         # Make a disposable local -> remote -> remote dependency chain.
         installer = self.repo / "git-commit/install.sh"
         installer.write_text(installer.read_text().replace(
@@ -90,9 +93,28 @@ class InstallerTests(unittest.TestCase):
             self.assertLess(output.index("skill=grilling"), output.index("skill=grill-me"))
             self.assertLess(output.index("skill=grill-me"), output.index("skill=git-commit"))
             for skill in before:
-                self.assert_link(".agents", skill)
+                for agent in (".agents", ".gemini/config"):
+                    self.assert_link(agent, skill)
                 self.assertEqual(before[skill], self.snapshot(skill))
-        self.run_script("ls-skill.sh")
+        output = self.run_script("ls-skill.sh")
+        for skill in before:
+            self.assertIn(skill, output)
+        self.assertIn("Codex, Antigravity", output)
+
+    def test_antigravity_inventory_without_executable(self):
+        for root, skill in (
+            (".gemini/config/skills", "git-commit"),
+            (".gemini/antigravity-cli/skills", "github-cli"),
+            (".gemini/antigravity/skills", "grilling"),
+            (".gemini/skills", "humanizer"),
+        ):
+            parent = self.home / root
+            parent.mkdir(parents=True, exist_ok=True)
+            (parent / skill).symlink_to(self.repo / skill)
+        output = self.run_script("ls-skill.sh")
+        for skill in ("git-commit", "github-cli", "grilling", "humanizer"):
+            self.assertIn(skill, output)
+        self.assertIn("Antigravity", output)
 
     def test_remote_fetch_failure_preserves_snapshot_and_link(self):
         self.stub("codex")
@@ -125,6 +147,7 @@ fi''')
     def test_conflicts_and_relative_links(self):
         self.stub("codex")
         self.stub("claude")
+        self.stub("agy")
         for skill in ("git-commit", "grilling"):
             args = () if skill == "git-commit" else ("--skip-update",)
             parent = self.home / ".agents/skills"
@@ -140,6 +163,7 @@ fi''')
                         link.symlink_to(self.home if kind == "foreign_link" else self.home / "missing")
                     self.assertIn("Conflict", self.run_script(f"{skill}/install.sh", *args, success=False))
                     self.assert_link(".claude", skill)
+                    self.assert_link(".gemini/config", skill)
                     if kind == "file":
                         self.assertEqual(link.read_text(), "keep me")
                     elif kind.endswith("link"):

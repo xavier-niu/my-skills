@@ -399,6 +399,7 @@ run_remote_skill_installer() {
 
   remote_skill_install_link "Codex" "codex" "$HOME/.agents/skills"
   remote_skill_install_link "Claude Code" "claude" "$HOME/.claude/skills"
+  remote_skill_install_link "Antigravity" "agy" "$HOME/.gemini/config/skills"
 
   if [[ -z $REMOTE_SKILL_REVISION && -f $SKILL_DIR/.upstream-revision ]]; then
     REMOTE_SKILL_REVISION=$(<"$SKILL_DIR/.upstream-revision")
